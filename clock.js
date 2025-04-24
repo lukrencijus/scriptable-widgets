@@ -1,7 +1,7 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
-// icon-color: deep-gray; icon-glyph: magic;
-// Medium Widget, no explicit refresh interval
+// icon-color: deep-purple; icon-glyph: clock;
+// Medium Clock Widget
 
 const W = 364;            // widget width
 const H = 169;            // widget height
@@ -41,7 +41,7 @@ async function createClock() {
   ctx.setFillColor(BG1);
   ctx.fillRect(new Rect(0, 0, W, H));
 
-  // Inner tint circle (simulated radial)
+  // Inner tint circle
   ctx.setFillColor(BG2);
   ctx.fillEllipse(
     new Rect(CX - R * 0.9, CY - R * 0.9, 2 * R * 0.9, 2 * R * 0.9)
@@ -70,28 +70,34 @@ async function createClock() {
     drawLine(ctx, new Point(x0, y0), new Point(x1, y1), wth, col);
   }
 
-  // Time
+  // Compute current time
   let now = new Date();
   let h = now.getHours() % 12;
   let m = now.getMinutes();
+
+  // Draw hour hand
   let hourAngle = (h + m / 60) / 12 * 2 * Math.PI - Math.PI / 2;
-  let minAngle = (m / 60) * 2 * Math.PI - Math.PI / 2;
+  let hx = CX + (R * 0.5) * Math.cos(hourAngle);
+  let hy = CY + (R * 0.5) * Math.sin(hourAngle);
+  drawLine(ctx, new Point(CX, CY), new Point(hx, hy), 6, HOUR_C);
+  roundCap(ctx, new Point(hx, hy), 6, HOUR_C);
 
-  // Slim rectangular, rounded-cap hands
-  drawRectHand(ctx, hourAngle, R * 0.45, 6, HOUR_C);  // 6pt hour
-  drawRectHand(ctx, minAngle,  R * 0.75, 4, MIN_C);   // 4pt minute
+  // Draw minute hand
+  let minAngle = m / 60 * 2 * Math.PI - Math.PI / 2;
+  let mx = CX + (R * 0.8) * Math.cos(minAngle);
+  let my = CY + (R * 0.8) * Math.sin(minAngle);
+  drawLine(ctx, new Point(CX, CY), new Point(mx, my), 4, MIN_C);
+  roundCap(ctx, new Point(mx, my), 4, MIN_C);
 
-  // Pivot halo & dot
+  // Pivot dot
   ctx.setFillColor(PIVOT);
-  ctx.fillEllipse(new Rect(CX - 12, CY - 12, 24, 24));
-  ctx.setFillColor(BG1);
-  ctx.fillEllipse(new Rect(CX - 6, CY - 6, 12, 12));
+  ctx.fillEllipse(new Rect(CX - 5, CY - 5, 10, 10));
 
   w.backgroundImage = ctx.getImage();
   return w;
 }
 
-// Helper: draw a tick via Path
+// Helper: draw a straight line via Path
 function drawLine(ctx, from, to, width, color) {
   ctx.setStrokeColor(color);
   ctx.setLineWidth(width);
@@ -102,8 +108,13 @@ function drawLine(ctx, from, to, width, color) {
   ctx.strokePath();
 }
 
-// Draws a straight rectangular hand with rounded ends.
-// angle: radians, length: px, width: px, color: Color
+// Helper: draw a filled circle at end of line for a rounded cap
+function roundCap(ctx, pt, diameter, color) {
+  ctx.setFillColor(color);
+  ctx.fillEllipse(new Rect(pt.x - diameter / 2, pt.y - diameter / 2, diameter, diameter));
+}
+
+// Helper: draw a straight rectangular hand with rounded ends
 function drawRectHand(ctx, angle, length, width, color) {
   let cos = Math.cos(angle);
   let sin = Math.sin(angle);
