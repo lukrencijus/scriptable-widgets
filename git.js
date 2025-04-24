@@ -50,15 +50,32 @@ function saveContributions(contributions) {
   fm.writeString(filePath, JSON.stringify(contributions));
 }
 
-// Format date as YYYY-MM-DD
+// Helper function to get the correct time zone offset for Lithuania
+function getLithuaniaOffset(date) {
+  // Lithuania is UTC+2 in standard time and UTC+3 in daylight saving time
+  const standardOffset = 2 * 60; // UTC+2 in minutes
+  const summerOffset = 3 * 60; // UTC+3 in minutes
+
+  // Check if daylight saving time is in effect
+  const jan = new Date(date.getFullYear(), 0, 1).getTimezoneOffset();
+  const jul = new Date(date.getFullYear(), 6, 1).getTimezoneOffset();
+  const currentOffset = date.getTimezoneOffset();
+
+  // If the current offset matches July's offset, it's summer time (DST)
+  return currentOffset === jul ? summerOffset : standardOffset;
+}
+
+// Format date as YYYY-MM-DD, adjusted for Lithuania's time zone
 function formatDate(date) {
-  return date.toISOString().slice(0, 10);
+  const lithuaniaOffset = getLithuaniaOffset(date); // Get Lithuania's offset in minutes
+  const offsetDate = new Date(date.getTime() + lithuaniaOffset * 60 * 1000); // Adjust date
+  return offsetDate.toISOString().slice(0, 10); // Format as YYYY-MM-DD
 }
 
 // --- Prompt user to add/remove today's contribution ---
 let contributions = loadContributions();
 let today = new Date();
-let todayKey = formatDate(today);
+let todayKey = formatDate(today); // Use the adjusted date
 
 if (!config.runsInWidget) {
   let alert = new Alert();
@@ -114,6 +131,10 @@ let dayOfWeek = today.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
 let daysSinceMonday = (dayOfWeek + 6) % 7; // 0 if Monday, 6 if Sunday
 let firstCellDate = new Date(today);
 firstCellDate.setDate(today.getDate() - ((WEEKS - 1) * 7 + daysSinceMonday));
+
+// Adjust the first cell date for Lithuania's time zone
+const lithuaniaOffset = getLithuaniaOffset(firstCellDate);
+firstCellDate = new Date(firstCellDate.getTime() + lithuaniaOffset * 60 * 1000);
 
 // --- Draw month labels (top) only if the 1st of the month is visible in this column ---
 ctx.setFont(Font.mediumSystemFont(16));
