@@ -1,7 +1,7 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-gray; icon-glyph: magic;
-// Medium Widget, refreshes every 15 minutes
+// Medium Widget, no explicit refresh interval
 
 const W = 364;            // widget width
 const H = 169;            // widget height
@@ -21,7 +21,6 @@ const PIVOT  = new Color('#0a84ff'); // pivot highlight
 
 if (config.runsInWidget) {
   let widget = await createClock();
-  widget.refreshAfterDate = new Date(Date.now() + 5 * 60 * 1000); // Refresh every 5 minutes
   Script.setWidget(widget);
   Script.complete();
 } else {
